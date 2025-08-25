@@ -84,9 +84,9 @@ const theme = createTheme({
 
 // API endpoints - Currently only 1 API is connected, 3 more need integration
 // TODO: Integrate all 4 APIs as mentioned by 範白松
-const ASR_API_BASE = 'https://service.dltechlab.top/atayal_asr';
-const TTS_API_BASE = 'https://service.dltechlab.top/atayal_tts';
-const TRANS_API_BASE = 'https://service.dltechlab.top/atayal_trans';
+const ASR_API_BASE = '/api/asr';
+const TTS_API_BASE = '/api/tts';
+const TRANS_API_BASE = '/api/trans';
 
 // Translation APIs
 const translateChineseToAtayal = async (text: string): Promise<string> => {
