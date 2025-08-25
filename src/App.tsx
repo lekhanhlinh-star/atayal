@@ -2020,6 +2020,52 @@ const TTSPage = () => {
 };
 
 const TranscribePage = () => {
+  const [audioFile, setAudioFile] = React.useState<File | null>(null);
+  const [transcription, setTranscription] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState('');
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setAudioFile(file);
+      setTranscription('');
+      setError('');
+    }
+  };
+
+  const handleTranscribe = async () => {
+    if (!audioFile) {
+      setError('請先選擇音檔 / Please choose an audio file first');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setTranscription('');
+    try {
+      const formData = new FormData();
+      formData.append('file', audioFile);
+      const response = await fetch('https://service.dltechlab.top/atayal_asr/to_atayal/', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+        },
+        body: formData,
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Transcription failed: ${response.status} - ${errorText}`);
+      }
+      const resultText = await response.text();
+      const cleanText = resultText.replace(/\[\d+\.\d+-\d+\.\d+s\]\s*/g, '').trim();
+      setTranscription(cleanText || resultText);
+    } catch (err: any) {
+      setError(err.message || 'Transcription failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Box sx={{ maxWidth: 1100, mx: 'auto', mt: 4 }}>
       {/* Background image container */}
@@ -2096,24 +2142,23 @@ const TranscribePage = () => {
                 style={{ display: 'none' }}
                 id="transcribe-audio-upload"
                 type="file"
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  if (file) {
-                    // Handle file upload logic here
-                    console.log('Audio file selected:', file.name);
-                  }
-                }}
+                onChange={handleFileChange}
               />
               <UploadButton htmlFor="transcribe-audio-upload">
                 <AudiotrackIcon /> 選擇音檔 Choose Audio File
               </UploadButton>
+              {audioFile && (
+                <Typography variant="body2" sx={{ mt: 1, color: '#2D3748' }}>
+                  已選擇檔案: {audioFile.name}
+                </Typography>
+              )}
             </Box>
           </Box>
           
           {/* Process Button */}
           <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <ProcessButton>
-              <AudiotrackIcon /> 開始轉錄 Start Transcription
+            <ProcessButton onClick={handleTranscribe} disabled={loading || !audioFile}>
+              <AudiotrackIcon /> {loading ? '轉錄中...' : '開始轉錄 Start Transcription'}
             </ProcessButton>
           </Box>
           
@@ -2123,10 +2168,14 @@ const TranscribePage = () => {
               轉錄結果 Transcription Result
             </Typography>
             <TextArea
+              value={transcription}
               placeholder="轉錄結果將顯示在這裡... / Transcription result will appear here..."
               readOnly
               style={{ minHeight: '120px' }}
             />
+            {error && (
+              <Typography color="error" sx={{ mt: 2 }}>{error}</Typography>
+            )}
           </Box>
         </StyledPaper>
       </Box>
