@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -155,6 +155,91 @@ const translateAtayalToChinese = async (text: string): Promise<string> => {
 };
 
 // API functions - Priority is to ensure system works with any audio input
+// --- Start Transcription Button Implementation ---
+const StartTranscriptionSection = () => {
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [result, setResult] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>('');
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setAudioFile(e.target.files[0]);
+    }
+  };
+
+  const handleTranscribe = async () => {
+    if (!audioFile) {
+      setError('Please select an audio file.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setResult('');
+    try {
+      const formData = new FormData();
+      formData.append('file', audioFile);
+      const response = await fetch('https://service.dltechlab.top/atayal_asr/to_atayal/', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+        },
+        body: formData,
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Transcription failed: ${response.status} - ${errorText}`);
+      }
+      const resultText = await response.text();
+      // Remove timestamps if present
+      const cleanText = resultText.replace(/\[\d+\.\d+-\d+\.\d+s\]\s*/g, '').trim();
+      setResult(cleanText || resultText);
+    } catch (err: any) {
+      setError(err.message || 'Transcription failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Box sx={{ mt: 4, mb: 4, textAlign: 'center' }}>
+      <Typography variant="h6" sx={{ mb: 2, color: '#d32f2f' }}>
+        語音轉文字 (Start Transcription)
+      </Typography>
+      <input
+        type="file"
+        accept="audio/*"
+        onChange={handleFileChange}
+        style={{ marginBottom: 16 }}
+      />
+      <br />
+      <button
+        onClick={handleTranscribe}
+        disabled={loading || !audioFile}
+        style={{
+          background: '#d32f2f',
+          color: 'white',
+          border: 'none',
+          borderRadius: 8,
+          padding: '8px 24px',
+          fontWeight: 600,
+          cursor: loading ? 'not-allowed' : 'pointer',
+        }}
+      >
+        {loading ? 'Transcribing...' : 'Start Transcription'}
+      </button>
+      {error && (
+        <Typography color="error" sx={{ mt: 2 }}>{error}</Typography>
+      )}
+      {result && (
+        <Paper sx={{ mt: 2, p: 2, background: '#fff5f5' }}>
+          <Typography variant="body1" sx={{ color: '#2D3748' }}>{result}</Typography>
+        </Paper>
+      )}
+    </Box>
+  );
+};
+// --- End Start Transcription Button Implementation ---
 const uploadAudioForTranscription = async (audioFile: File, targetLanguage: 'chinese' | 'atayal') => {
   const formData = new FormData();
   formData.append('file', audioFile);
@@ -795,6 +880,8 @@ const HomePage = () => (
         Atayal Medicinal Knowledge and AI-assisted Language Learning
       </Typography>
     </Box>
+  {/* Start Transcription Button Section */}
+  <StartTranscriptionSection />
 
     {/* Features Section */}
     <Box sx={{ mb: 6, textAlign: 'center' }}>
