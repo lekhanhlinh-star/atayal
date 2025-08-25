@@ -179,22 +179,35 @@ const StartTranscriptionSection = () => {
     try {
       const formData = new FormData();
       formData.append('file', audioFile);
-      const response = await fetch('https://service.dltechlab.top/atayal_asr/to_atayal/', {
+      // Debug: log FormData contents
+      console.debug('[Transcription] Sending file:', audioFile.name, 'size:', audioFile.size, 'type:', audioFile.type);
+      for (const [key, value] of formData.entries()) {
+        console.debug(`[Transcription] FormData entry:`, key, value);
+      }
+      const apiUrl = 'https://service.dltechlab.top/atayal_asr/to_atayal/';
+      console.debug('[Transcription] API URL:', apiUrl);
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'accept': 'application/json',
         },
         body: formData,
       });
+      console.debug('[Transcription] Response status:', response.status);
+      console.debug('[Transcription] Response headers:', response.headers);
       if (!response.ok) {
         const errorText = await response.text();
+        console.error('[Transcription] API Error Response:', errorText);
         throw new Error(`Transcription failed: ${response.status} - ${errorText}`);
       }
       const resultText = await response.text();
+      console.debug('[Transcription] API Response:', resultText);
       // Remove timestamps if present
       const cleanText = resultText.replace(/\[\d+\.\d+-\d+\.\d+s\]\s*/g, '').trim();
+      console.debug('[Transcription] Cleaned text:', cleanText);
       setResult(cleanText || resultText);
     } catch (err: any) {
+      console.error('[Transcription] Error:', err);
       setError(err.message || 'Transcription failed');
     } finally {
       setLoading(false);
