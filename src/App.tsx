@@ -181,9 +181,9 @@ const StartTranscriptionSection = () => {
       formData.append('file', audioFile);
       // Debug: log FormData contents
       console.debug('[Transcription] Sending file:', audioFile.name, 'size:', audioFile.size, 'type:', audioFile.type);
-      for (const [key, value] of formData.entries()) {
-        console.debug(`[Transcription] FormData entry:`, key, value);
-      }
+      // for (const [key, value] of formData.entries()) {
+      //   console.debug(`[Transcription] FormData entry:`, key, value);
+      // }
       const apiUrl = 'https://service.dltechlab.top/atayal_asr/to_atayal/';
       console.debug('[Transcription] API URL:', apiUrl);
       const response = await fetch(apiUrl, {
