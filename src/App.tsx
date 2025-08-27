@@ -894,7 +894,7 @@ const HomePage = () => (
       </Typography>
     </Box>
   {/* Start Transcription Button Section */}
-  <StartTranscriptionSection />
+  {/* <StartTranscriptionSection /> */}
 
     {/* Features Section */}
     <Box sx={{ mb: 6, textAlign: 'center' }}>
